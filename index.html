@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>Dora's Workout Timer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f13; --surface: #1a1a22; --card: #22222e;
+      --accent: #c084fc; --accent2: #818cf8; --green: #34d399;
+      --text: #f1f0f5; --muted: #8b8a99; --border: #2e2e3e;
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+    header {
+      padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      position: sticky; top: 0; background: var(--bg); z-index: 10; flex-shrink: 0;
+    }
+    .back-btn { background: none; border: none; color: var(--accent); font-size: 26px; cursor: pointer; padding: 0 8px 0 0; display: none; line-height: 1; }
+    header h1 { font-size: 17px; font-weight: 700; }
+    #header-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+    /* ── Views ── */
+    .view { padding: 20px; display: none; flex-direction: column; flex: 1; }
+    .view.active { display: flex; }
+
+    /* ── Day Picker ── */
+    #day-picker h2 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+    .day-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px 16px; margin-bottom: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      -webkit-tap-highlight-color: transparent; transition: border-color 0.15s;
+    }
+    .day-card:active { border-color: var(--accent); transform: scale(0.99); }
+    .day-name { font-size: 16px; font-weight: 600; }
+    .day-focus { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .day-meta { display: flex; align-items: center; gap: 6px; }
+    .day-tag { font-size: 11px; color: var(--accent); background: rgba(192,132,252,0.12); padding: 3px 8px; border-radius: 6px; }
+    .chevron { color: var(--muted); font-size: 18px; }
+
+    /* ── Session View ── */
+    .sess-title { font-size: 20px; font-weight: 700; }
+    .sess-sub { font-size: 13px; color: var(--muted); margin-top: 3px; margin-bottom: 18px; }
+    .step-list { flex: 1; overflow-y: auto; }
+    .step-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+    }
+    .step-item:last-child { border-bottom: none; }
+    .step-item.clickable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .step-item.clickable:active { opacity: 0.7; }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: var(--muted);
+    }
+    .step-num.is-rest { background: rgba(52,211,153,0.08); border-color: rgba(52,211,153,0.3); color: var(--green); font-size: 10px; }
+    .step-info { flex: 1; min-width: 0; }
+    .step-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .step-note { font-size: 11px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .step-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .step-dur { font-size: 12px; font-weight: 600; color: var(--accent2); background: rgba(129,140,248,0.1); padding: 2px 7px; border-radius: 5px; }
+    .yt-dot { width: 8px; height: 8px; background: #ff4444; border-radius: 50%; }
+    .run-btn {
+      margin-top: 14px; width: 100%; padding: 15px;
+      background: var(--accent); border: none; border-radius: 14px;
+      color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+    }
+    .run-btn:active { opacity: 0.85; }
+
+    /* ── Detail View ── */
+    #detail-view { gap: 14px; }
+    .det-name { font-size: 22px; font-weight: 800; line-height: 1.2; }
+    .det-reps { font-size: 16px; font-weight: 700; color: var(--accent); }
+    .det-note { font-size: 14px; color: var(--muted); line-height: 1.65; flex: 1; }
+    .yt-link-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 18px; background: #cc0000; border: none; border-radius: 12px;
+      color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer;
+      align-self: flex-start; flex-shrink: 0;
+    }
+    .yt-link-btn:active { opacity: 0.85; }
+    .start-here-btn {
+      width: 100%; padding: 15px; background: var(--accent); border: none; border-radius: 14px;
+      color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+    }
+    .start-here-btn:active { opacity: 0.85; }
+
+    /* ── Flow View ── */
+    #flow-view { padding: 14px 20px 22px; justify-content: space-between; }
+    .fl-header { text-align: center; }
+    .fl-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+    .fl-stepnum { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .fl-name { font-size: 20px; font-weight: 700; text-align: center; padding: 0 8px; line-height: 1.3; margin: 10px 0; }
+
+    /* Ring */
+    .ring-wrap { position: relative; width: 196px; height: 196px; align-self: center; }
+    .ring-wrap svg { transform: rotate(-90deg); }
+    #ring-bg { stroke: var(--border); }
+    #ring-fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 0.3s linear, stroke 0.3s; }
+    .ring-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    #time-display { font-size: 50px; font-weight: 800; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
+    #time-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Timed layout */
+    #timed-layout { display: none; flex-direction: column; align-items: center; gap: 12px; }
+    .fl-note { font-size: 13px; color: var(--muted); text-align: center; padding: 0 16px; line-height: 1.5; }
+
+    /* Rep layout */
+    #rep-layout {
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 28px 20px; text-align: center;
+    }
+    .rep-count { font-size: 38px; font-weight: 800; color: var(--accent); }
+    .rep-sub { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .rep-note { font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .rep-yt-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; background: rgba(255,0,0,0.12); border: 1px solid rgba(255,60,60,0.3);
+      border-radius: 8px; color: #ff5555; font-size: 13px; font-weight: 500;
+      text-decoration: none; cursor: pointer;
+    }
+
+    /* Up next */
+    .up-next { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+    .up-next-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .up-next-name { font-size: 13px; font-weight: 500; }
+
+    /* Controls */
+    .ctrl-row { display: flex; gap: 10px; margin-top: 10px; }
+    .ctrl-btn {
+      flex: 1; padding: 14px; border-radius: 12px; border: none;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .ctrl-btn:active { opacity: 0.7; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-green { background: var(--green); color: #000; }
+    .btn-wide { flex: 2; }
+
+    /* Done */
+    #done-view { align-items: center; justify-content: center; text-align: center; gap: 14px; }
+    .done-emoji { font-size: 60px; }
+    .done-title { font-size: 24px; font-weight: 800; }
+    .done-sub { font-size: 14px; color: var(--muted); }
+    .done-back { margin-top: 8px; padding: 14px 32px; background: var(--accent); border: none; border-radius: 14px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .done-back:active { opacity: 0.85; }
+  </style>
+</head>
+<body>
+
+<header>
+  <button class="back-btn" id="back-btn">‹</button>
+  <div>
+    <h1>Workout Timer</h1>
+    <div id="header-sub">Choose your day</div>
+  </div>
+</header>
+
+<!-- View 1: Day Picker -->
+<div class="view" id="day-picker">
+  <h2>Select Day</h2>
+  <div id="day-list"></div>
+</div>
+
+<!-- View 2: Session -->
+<div class="view" id="session-view">
+  <div class="sess-title" id="sess-title"></div>
+  <div class="sess-sub" id="sess-sub"></div>
+  <div class="step-list" id="step-list"></div>
+  <button class="run-btn" id="start-btn">▶ Start Session</button>
+</div>
+
+<!-- View 3: Exercise Detail -->
+<div class="view" id="detail-view">
+  <div class="det-name" id="det-name"></div>
+  <div class="det-reps" id="det-reps"></div>
+  <div class="det-note" id="det-note"></div>
+  <a class="yt-link-btn" id="det-yt" href="" target="_blank" style="display:none">▶ Watch on YouTube</a>
+  <button class="start-here-btn" id="det-start-btn">▶ Start from here</button>
+</div>
+
+<!-- View 4: Flow (timer + rep) -->
+<div class="view" id="flow-view">
+  <div class="fl-header">
+    <div class="fl-label" id="fl-label"></div>
+    <div class="fl-stepnum" id="fl-stepnum"></div>
+  </div>
+
+  <div class="fl-name" id="fl-name"></div>
+
+  <!-- Timed -->
+  <div id="timed-layout">
+    <div class="ring-wrap">
+      <svg width="196" height="196" viewBox="0 0 196 196">
+        <circle id="ring-bg" cx="98" cy="98" r="84" fill="none" stroke-width="9"/>
+        <circle id="ring-fg" cx="98" cy="98" r="84" fill="none" stroke-width="9"
+          stroke-dasharray="527.8" stroke-dashoffset="0"/>
+      </svg>
+      <div class="ring-inner">
+        <div id="time-display">0</div>
+        <div id="time-label">seconds</div>
+      </div>
+    </div>
+    <div class="fl-note" id="fl-note"></div>
+  </div>
+
+  <!-- Rep -->
+  <div id="rep-layout">
+    <div class="rep-sub">Do</div>
+    <div class="rep-count" id="fl-reps"></div>
+    <div class="rep-note" id="fl-rep-note"></div>
+    <a class="rep-yt-btn" id="fl-yt" href="" target="_blank" style="display:none">▶ Watch example</a>
+  </div>
+
+  <div>
+    <div class="up-next" id="up-next-box">
+      <div class="up-next-label">Up next</div>
+      <div class="up-next-name" id="up-next-name">—</div>
+    </div>
+
+    <!-- Controls: running timed -->
+    <div class="ctrl-row" id="ctrl-running" style="display:none">
+      <button class="ctrl-btn btn-secondary" id="btn-restart">↺</button>
+      <button class="ctrl-btn btn-primary btn-wide" id="btn-playpause">⏸ Pause</button>
+      <button class="ctrl-btn btn-secondary" id="btn-skip-timed">Skip ›</button>
+    </div>
+    <!-- Controls: timed done, waiting for user -->
+    <div class="ctrl-row" id="ctrl-done" style="display:none">
+      <button class="ctrl-btn btn-secondary" id="btn-restart2">↺</button>
+      <button class="ctrl-btn btn-green btn-wide" id="btn-next">Next ›</button>
+    </div>
+    <!-- Controls: rep step -->
+    <div class="ctrl-row" id="ctrl-rep" style="display:none">
+      <button class="ctrl-btn btn-green btn-wide" id="btn-done">Done ✓</button>
+      <button class="ctrl-btn btn-secondary" id="btn-skip-rep">Skip ›</button>
+    </div>
+  </div>
+</div>
+
+<!-- View 5: Done -->
+<div class="view" id="done-view">
+  <div class="done-emoji">🎉</div>
+  <div class="done-title">Session Complete!</div>
+  <div class="done-sub" id="done-sub"></div>
+  <button class="done-back" id="done-back-btn">← Back to Days</button>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const DAYS = [
+  {
+    id: 'monday', name: 'Monday', focus: 'Legs · Glute Shape & Lift',
+    steps: [
+      { name: 'Hip Circle Warm-up', reps: '2×10 each side', note: 'Qigong: guide intention to hips. Small to large circles.', type: 'reps', link: null },
+      { name: 'Clamshell', reps: '3×15', note: 'Side-lying. Activate gluteus medius. Squeeze at top.', type: 'reps', link: 'https://youtube.com/shorts/Hj-2r7OlXuE?si=JHynu4XC_XVSk3KD' },
+      { name: 'Rest', dur: 60, note: 'Breathe. Prepare for next exercise.', type: 'rest' },
+      { name: 'Lateral Band Walk', reps: '3×12 each', note: 'Stay low, core stable throughout.', type: 'reps', link: 'https://youtu.be/6eoK_yxY8Ak?si=995KXMF3vnuxryC1' },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Bulgarian Split Squat', reps: '3×10 each', note: '4-second eccentric — control the lowering phase.', type: 'reps', link: 'https://youtube.com/shorts/J1PEjNVe7po?si=RaZPu-YIl3JReBP3' },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Side-Lying Leg Raise', reps: '3×15 each', note: 'Squeeze 1 second at top.', type: 'reps', link: 'https://youtube.com/shorts/uYP78pCfzVQ?si=Y0BJ9BHPwB3SFc0N' },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Sumo Squat', reps: '3×12', note: 'Toes 45° out. Emphasize outer glutes and abduction.', type: 'reps', link: 'https://youtube.com/shorts/sQ-lwJtpwUc?si=DQ0lp1BWdB-8JYot' },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Standing Band Kickback (Lateral)', reps: '3×15 each', note: 'Controlled speed. Squeeze at top.', type: 'reps', link: 'https://youtube.com/shorts/CZvQm1vNzD0?si=ZIwJoszWvg_789_V' },
+      { name: 'Cool-down: Ba Duan Jin + Hip Flexor Stretch', dur: 300, note: '双手托天理三焦 × 3 rounds, then hip flexor stretch. Diaphragmatic breathing throughout.', type: 'rest' },
+      { name: 'Zone 2 Cardio: Walk or Bike', reps: '20 min', note: 'Post-strength. Conversational pace. Nose-breathing comfortable.', type: 'reps', link: null },
+    ]
+  },
+  {
+    id: 'tuesday', name: 'Tuesday', focus: 'Back · Face Lift · Neck',
+    steps: [
+      { name: 'Cervical Myofascial Release', dur: 120, note: 'Fascia ball or fingertips. Press 风池 (Fengchi) and 肩井 (Jianjing) acupoints.', type: 'rest' },
+      { name: 'Cat-Cow', reps: '2×10', note: 'Full spinal articulation. Match breath to movement.', type: 'reps', link: null },
+      { name: 'Rest', dur: 30, type: 'rest' },
+      { name: 'Seated Cable Row', reps: '3×12', note: 'Depress scapula first. Pull elbows back. No shoulder shrug.', type: 'reps', link: null },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Wide-Grip Lat Pulldown', reps: '3×10', note: 'Focus on lat contraction. No momentum.', type: 'reps', link: null },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Face Pull', reps: '3×15', note: 'External rotation. Counteracts forward head posture.', type: 'reps', link: null },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Y-T-W Raises', reps: '2×12 each', note: 'Prone. Strengthen lower and mid trapezius.', type: 'reps', link: null },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Reverse Fly', reps: '3×15', note: 'Rear delts + rhomboids. Fix rounded shoulders.', type: 'reps', link: null },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Neck Isometric — Forward (Set 1)', dur: 8, note: 'Press forehead into palm. Zero movement. Breathe.', type: 'hold', link: 'https://www.youtube.com/watch?v=0kWF968uFXY&t=4s' },
+      { name: 'Neck Isometric — Back (Set 1)', dur: 8, note: 'Press back of head into clasped hands.', type: 'hold' },
+      { name: 'Neck Isometric — Left (Set 1)', dur: 8, note: 'Press left temple into left palm.', type: 'hold' },
+      { name: 'Neck Isometric — Right (Set 1)', dur: 8, note: 'Press right temple into right palm.', type: 'hold' },
+      { name: 'Rest — Neck', dur: 30, note: 'Relax neck fully. Gentle roll if needed.', type: 'rest' },
+      { name: 'Neck Isometric — Forward (Set 2)', dur: 8, note: 'Press forehead into palm.', type: 'hold' },
+      { name: 'Neck Isometric — Back (Set 2)', dur: 8, type: 'hold' },
+      { name: 'Neck Isometric — Left (Set 2)', dur: 8, type: 'hold' },
+      { name: 'Neck Isometric — Right (Set 2)', dur: 8, type: 'hold' },
+      { name: 'Rest — Neck', dur: 30, note: 'Relax neck fully.', type: 'rest' },
+      { name: 'Neck Isometric — Forward (Set 3)', dur: 8, note: 'Last set. Full focus.', type: 'hold' },
+      { name: 'Neck Isometric — Back (Set 3)', dur: 8, type: 'hold' },
+      { name: 'Neck Isometric — Left (Set 3)', dur: 8, type: 'hold' },
+      { name: 'Neck Isometric — Right (Set 3)', dur: 8, type: 'hold' },
+      { name: 'Cool-down: Thoracic Foam Roll + Neck Stretch', dur: 300, note: 'Ba Duan Jin: 左右开弓似射雕 × 3. Then thoracic foam roll, neck-shoulder stretch.', type: 'rest' },
+      { name: 'Zone 2 Cardio: Elliptical', reps: '20 min', note: 'Post-strength. Conversational pace.', type: 'reps' },
+    ]
+  },
+  {
+    id: 'wednesday', name: 'Wednesday', focus: 'Core · Ab Definition',
+    steps: [
+      { name: 'Diaphragmatic Breathing', reps: '3×5 breaths', note: 'Exhale and feel belly wall draw inward. Qigong breath regulation.', type: 'reps', link: null },
+      { name: 'Dead Bug', reps: '3×10 each', note: 'Lower back FLAT on floor the whole time. Key move for lower belly.', type: 'reps', link: null },
+      { name: 'Rest', dur: 30, type: 'rest' },
+      { name: 'Heels to Heaven', reps: '15–20', note: 'Lower back flat. Exhale on the lift. No breath-holding.', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Scissor Kicks', reps: '×20', note: 'Lower back pressed down, legs hover just off ground.', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Crunch', reps: '×20', note: 'Exhale up. Do NOT pull neck.', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Cross Crunch', reps: '×20 each', note: 'Diagonal twist, slow and controlled.', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Russian Twist', reps: '×20', note: 'Neutral spine. Feet off ground for progression.', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Mountain Climber', reps: '×20 each', note: 'Keep breathing steady. No breath-holding.', type: 'reps', link: null },
+      { name: 'Round 1 Rest', dur: 60, note: 'Full rest. Breathe.', type: 'rest' },
+      { name: 'Heels to Heaven (R2)', reps: '15–20', note: 'Round 2. Same form.', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Scissor Kicks (R2)', reps: '×20', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Crunch (R2)', reps: '×20', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Cross Crunch (R2)', reps: '×20 each', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Russian Twist (R2)', reps: '×20', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Mountain Climber (R2)', reps: '×20 each', type: 'reps', link: null },
+      { name: 'Round 2 Rest', dur: 60, note: 'Full rest. Breathe.', type: 'rest' },
+      { name: 'Heels to Heaven (R3)', reps: '15–20', note: 'Last round. Focus.', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Scissor Kicks (R3)', reps: '×20', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Crunch (R3)', reps: '×20', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Cross Crunch (R3)', reps: '×20 each', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Russian Twist (R3)', reps: '×20', type: 'reps', link: null },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Mountain Climber (R3)', reps: '×20 each', note: 'Last one. Give it everything.', type: 'reps', link: null },
+      { name: 'Phase 3: Plank (Set 1)', dur: 40, note: 'Ribs down, hips level. Diaphragmatic breathing.', type: 'hold' },
+      { name: 'Rest', dur: 20, type: 'rest' },
+      { name: 'Side Plank — Left (Set 1)', dur: 28, note: 'Hips high, squeeze side waist.', type: 'hold' },
+      { name: 'Side Plank — Right (Set 1)', dur: 28, type: 'hold' },
+      { name: 'Rest', dur: 20, type: 'rest' },
+      { name: 'Plank (Set 2)', dur: 40, note: 'Breathe steady. Core tight.', type: 'hold' },
+      { name: 'Rest', dur: 20, type: 'rest' },
+      { name: 'Side Plank — Left (Set 2)', dur: 28, type: 'hold' },
+      { name: 'Side Plank — Right (Set 2)', dur: 28, type: 'hold' },
+      { name: 'Rest', dur: 20, type: 'rest' },
+      { name: 'Plank (Set 3)', dur: 40, note: 'Last one.', type: 'hold' },
+      { name: 'Rest', dur: 20, type: 'rest' },
+      { name: 'Side Plank — Left (Set 3)', dur: 28, type: 'hold' },
+      { name: 'Side Plank — Right (Set 3)', dur: 28, type: 'hold' },
+      { name: 'Rest', dur: 20, type: 'rest' },
+      { name: 'Zhan Zhuang — Horse Stance (Set 1)', dur: 45, note: 'Focus on dantian breathing. Sink into the stance.', type: 'hold' },
+      { name: 'Rest', dur: 20, type: 'rest' },
+      { name: 'Zhan Zhuang (Set 2)', dur: 45, type: 'hold' },
+      { name: 'Rest', dur: 20, type: 'rest' },
+      { name: 'Zhan Zhuang (Set 3)', dur: 45, note: 'Last hold. Breathe deep.', type: 'hold' },
+      { name: 'Cool-down: Cat-Cow + Child\'s Pose + Spinal Twist', dur: 300, note: 'Breathe into tight spots. Let the spine decompress.', type: 'rest' },
+      { name: 'Zone 2 Cardio: Walk (Longer)', reps: '30–35 min', note: 'Standalone longer Zone 2. Conversational pace.', type: 'reps' },
+    ]
+  },
+  {
+    id: 'thursday', name: 'Thursday', focus: 'Shoulders · Toning & Posture',
+    steps: [
+      { name: 'Shoulder Circle Warm-up', reps: '2×10 each direction', note: 'Small to large circles. Release glenohumeral joint.', type: 'reps', link: null },
+      { name: 'Arnold Press', reps: '2×10', note: 'Rotate as you press up. Adds 3D shoulder definition.', type: 'reps', link: null },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Overhead Press (light)', reps: '3×10', note: '⚠️ Light weight only. No breath-holding. Pneumothorax caution.', type: 'reps', link: null },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Dumbbell Lateral Raise', reps: '3×15', note: 'Light weight, slight elbow bend. No shoulder shrug.', type: 'reps', link: null },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Front Raise', reps: '3×12', note: 'Alternating arms. Control the eccentric (lower slowly).', type: 'reps', link: null },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Bent-Over Reverse Fly', reps: '3×15', note: 'Rear delts + rhomboids. Corrects rounded shoulders.', type: 'reps', link: null },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Band External Rotation', reps: '3×15', note: 'Rotator cuff stability. Injury prevention.', type: 'reps', link: 'https://www.youtube.com/watch?v=_UvmPNGtlPM' },
+      { name: 'Ba Duan Jin: 调理脾胃须单举', reps: '3 rounds', note: 'One arm raises overhead while other presses down. Balance digestive qi.', type: 'reps', link: null },
+      { name: 'Cool-down: Chest Cross + Shoulder Stretch + Neck Massage', dur: 300, note: 'Press 肩髃 and 曲池 acupoints. Thoracic foam roll.', type: 'rest' },
+      { name: 'Zone 2 Cardio: Walk', reps: '20 min', note: 'Post-strength. Easy conversational pace.', type: 'reps' },
+    ]
+  },
+  {
+    id: 'friday', name: 'Friday', focus: 'Legs · Glute Max Strength',
+    steps: [
+      { name: 'Glute Bridge Warm-up', reps: '2×15', note: 'Build mind-muscle connection with glutes before loading.', type: 'reps', link: null },
+      { name: 'Romanian Deadlift', reps: '3×10', note: 'Hip hinge. Don\'t round lower back. Feel the hamstring stretch.', type: 'reps', link: 'https://www.youtube.com/shorts/hu3jRvTc_po' },
+      { name: 'Rest', dur: 90, type: 'rest' },
+      { name: 'Hip Thrust', reps: '4×12', note: 'Pause 1 second at top. Fully squeeze glutes at peak.', type: 'reps', link: 'https://www.youtube.com/shorts/_i6qpcI1Nw4' },
+      { name: 'Rest', dur: 90, type: 'rest' },
+      { name: 'Back/Goblet Squat', reps: '3×12', note: 'Squat to depth. Activate glute max.', type: 'reps', link: 'https://www.youtube.com/shorts/lRYBbchqxtI' },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Single-Leg Glute Bridge', reps: '3×10 each', note: 'Strengthens asymmetrical stability.', type: 'reps', link: 'https://www.youtube.com/shorts/91EUeiZsSNc' },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Reverse Lunge', reps: '3×10 each', note: 'Drive through front leg — emphasize glutes.', type: 'reps', link: 'https://www.youtube.com/shorts/YSuIZ6CbOQs' },
+      { name: 'Rest', dur: 60, type: 'rest' },
+      { name: 'Donkey Kick', reps: '3×15 each', note: 'Add resistance band for more tension. Squeeze at top.', type: 'reps', link: 'https://www.youtube.com/shorts/29aZK56G49o' },
+      { name: 'Ba Duan Jin: 两手攀足固肾腰', reps: '3 rounds', note: 'Forward fold reaching toes. Nourishes kidneys and lumbar.', type: 'reps', link: null },
+      { name: 'Cool-down: Lizard + Pigeon + Supine Twist', dur: 480, note: 'Lizard (hip flexors) · Pigeon (piriformis) · Supine twist (spine). 8 min.', type: 'rest' },
+      { name: 'Zone 2 Cardio: Walk or Bike', reps: '20 min', note: 'Post-strength. Easy pace.', type: 'reps' },
+    ]
+  },
+  {
+    id: 'saturday', name: 'Saturday', focus: 'Active Recovery',
+    steps: [
+      { name: 'Morning Walk', reps: '20–30 min', note: 'Easy pace. No target HR. Fresh air. Optional: post-meal walk counts.', type: 'reps', link: null },
+      { name: 'Full Ba Duan Jin (8 Brocades)', reps: 'All 8 movements', note: 'Do all 8 movements in sequence. Mindful, breath-led. Approx 10 min.', type: 'reps', link: null },
+      { name: 'Full-Body Yoga / Stretch', reps: '20 min', note: 'Yin-style. Hold each pose 2–3 min. Breathe into tight areas.', type: 'reps', link: null },
+      { name: 'Meditation & Breathwork', reps: '10 min', note: '6-4-6 breathing × 5 rounds, then free sit. Let the week settle.', type: 'reps', link: null },
+    ]
+  },
+  {
+    id: 'sunday', name: 'Sunday', focus: 'Rest or Easy Swim',
+    steps: [
+      { name: 'Rest Day', reps: 'Full rest', note: 'Let your body recover and adapt. Optional: easy swim at low intensity.', type: 'reps', link: null },
+      { name: 'Post-Meal Walk (optional)', reps: '10 min × each meal', note: 'Bryan Johnson: 10-min walk after meals reduces glucose spike and aids digestion.', type: 'reps', link: null },
+      { name: 'Evening Breathwork', reps: '5 rounds', note: '6-4-6 breathing. Calm the nervous system before sleep.', type: 'reps', link: null },
+    ]
+  },
+  {
+    id: 'balance', name: 'Daily Balance', focus: 'Balance Training · 5 min',
+    steps: [
+      { name: 'Single-Leg Stand — Left (Set 1)', dur: 30, note: 'Eyes open. Focus on a point ahead.', type: 'hold', link: null },
+      { name: 'Single-Leg Stand — Right (Set 1)', dur: 30, type: 'hold' },
+      { name: 'Single-Leg Stand — Left (Set 2)', dur: 30, type: 'hold' },
+      { name: 'Single-Leg Stand — Right (Set 2)', dur: 30, type: 'hold' },
+      { name: 'Single-Leg Stand — Left (Set 3)', dur: 30, type: 'hold' },
+      { name: 'Single-Leg Stand — Right (Set 3)', dur: 30, type: 'hold' },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Eyes-Closed Stand — Left (Set 1)', dur: 18, note: 'Close eyes. Stay calm. Near a wall for safety.', type: 'hold' },
+      { name: 'Eyes-Closed Stand — Right (Set 1)', dur: 18, type: 'hold' },
+      { name: 'Eyes-Closed Stand — Left (Set 2)', dur: 18, type: 'hold' },
+      { name: 'Eyes-Closed Stand — Right (Set 2)', dur: 18, type: 'hold' },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Lunge Balance Hold — Left (Set 1)', dur: 10, note: 'Core tight, look straight ahead.', type: 'hold' },
+      { name: 'Lunge Balance Hold — Right (Set 1)', dur: 10, type: 'hold' },
+      { name: 'Lunge Balance Hold — Left (Set 2)', dur: 10, type: 'hold' },
+      { name: 'Lunge Balance Hold — Right (Set 2)', dur: 10, type: 'hold' },
+      { name: 'Rest', dur: 15, type: 'rest' },
+      { name: 'Tandem Heel-to-Toe Walk', reps: '10 steps × 2', note: 'Walk in a straight line, heel directly in front of toe each step.', type: 'reps', link: null },
+    ]
+  },
+  {
+    id: 'breathing', name: 'Evening Breathing', focus: 'Qigong 6-4-6 · 5 rounds',
+    steps: [
+      { name: 'Round 1 — Inhale', dur: 6, note: 'In through nose. Slow and full.', type: 'breathe' },
+      { name: 'Round 1 — Hold', dur: 4, note: 'Hold gently. No tension.', type: 'hold' },
+      { name: 'Round 1 — Exhale', dur: 6, note: 'Out through mouth. Let go completely.', type: 'breathe' },
+      { name: 'Round 2 — Inhale', dur: 6, type: 'breathe' },
+      { name: 'Round 2 — Hold', dur: 4, type: 'hold' },
+      { name: 'Round 2 — Exhale', dur: 6, type: 'breathe' },
+      { name: 'Round 3 — Inhale', dur: 6, type: 'breathe' },
+      { name: 'Round 3 — Hold', dur: 4, type: 'hold' },
+      { name: 'Round 3 — Exhale', dur: 6, type: 'breathe' },
+      { name: 'Round 4 — Inhale', dur: 6, type: 'breathe' },
+      { name: 'Round 4 — Hold', dur: 4, type: 'hold' },
+      { name: 'Round 4 — Exhale', dur: 6, type: 'breathe' },
+      { name: 'Round 5 — Inhale', dur: 6, type: 'breathe' },
+      { name: 'Round 5 — Hold', dur: 4, type: 'hold' },
+      { name: 'Round 5 — Exhale', dur: 6, note: 'Last exhale. Feel the calm settle in.', type: 'breathe' },
+    ]
+  }
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let currentDay = null;
+let currentStepIdx = 0;
+let detailFromIdx = null;
+let timeLeft = 0;
+let totalTime = 0;
+let timerInterval = null;
+let isRunning = false;
+const CIRC = 2 * Math.PI * 84; // 527.8
+
+// ─── AUDIO ───────────────────────────────────────────────────────────────────
+const ACtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+function tryAudio() {
+  try { if (!audioCtx) audioCtx = new ACtx(); audioCtx.resume(); } catch(e) {}
+}
+function beep(freq=880, dur=0.15, type='sine') {
+  try {
+    if (!audioCtx) audioCtx = new ACtx();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.35, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.start(audioCtx.currentTime); o.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+function beepDone() {
+  setTimeout(() => beep(660, 0.12), 0);
+  setTimeout(() => beep(880, 0.12), 150);
+  setTimeout(() => beep(1100, 0.25), 300);
+}
+function beepTick() { beep(440, 0.05, 'square'); }
+
+// ─── VIEWS ───────────────────────────────────────────────────────────────────
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const back = document.getElementById('back-btn');
+  const sub = document.getElementById('header-sub');
+  if (id === 'day-picker') {
+    back.style.display = 'none'; sub.textContent = 'Choose your day';
+  } else if (id === 'session-view') {
+    back.style.display = 'block'; sub.textContent = currentDay?.name || '';
+  } else if (id === 'detail-view') {
+    back.style.display = 'block'; sub.textContent = 'Exercise Detail';
+  } else if (id === 'flow-view') {
+    back.style.display = 'block'; sub.textContent = currentDay?.name || '';
+  } else {
+    back.style.display = 'block'; sub.textContent = currentDay?.name || '';
+  }
+}
+
+// ─── DAY PICKER ──────────────────────────────────────────────────────────────
+function buildDayPicker() {
+  const list = document.getElementById('day-list');
+  list.innerHTML = '';
+  DAYS.forEach(day => {
+    const timedCount = day.steps.filter(s => s.dur && s.type !== 'rest').length;
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    card.innerHTML = `
+      <div>
+        <div class="day-name">${day.name}</div>
+        <div class="day-focus">${day.focus}</div>
+      </div>
+      <div class="day-meta">
+        ${timedCount > 0 ? `<span class="day-tag">${timedCount} timers</span>` : ''}
+        <span class="chevron">›</span>
+      </div>`;
+    card.addEventListener('click', () => { tryAudio(); openDay(day); });
+    list.appendChild(card);
+  });
+}
+
+// ─── SESSION VIEW ─────────────────────────────────────────────────────────────
+function openDay(day) {
+  currentDay = day;
+  document.getElementById('sess-title').textContent = day.name;
+  document.getElementById('sess-sub').textContent = day.focus;
+  const list = document.getElementById('step-list');
+  list.innerHTML = '';
+  let exNum = 0;
+  day.steps.forEach((step, i) => {
+    const isRest = step.type === 'rest' || step.type === 'breathe';
+    const item = document.createElement('div');
+    item.className = 'step-item' + (isRest ? '' : ' clickable');
+    if (!isRest) exNum++;
+    const dur = step.dur;
+    const durText = dur
+      ? (dur >= 60 ? Math.floor(dur/60) + 'm' + (dur % 60 ? (dur%60)+'s' : '') : dur + 's')
+      : (step.reps || '');
+    item.innerHTML = `
+      <div class="step-num${isRest ? ' is-rest' : ''}">${isRest ? '·' : exNum}</div>
+      <div class="step-info">
+        <div class="step-name">${step.name}</div>
+        ${step.note && !isRest ? `<div class="step-note">${step.note.substring(0,55)}${step.note.length>55?'…':''}</div>` : ''}
+      </div>
+      <div class="step-right">
+        ${step.link ? '<span class="yt-dot"></span>' : ''}
+        ${durText ? `<span class="step-dur">${durText}</span>` : ''}
+      </div>`;
+    if (!isRest) item.addEventListener('click', () => openDetail(i));
+    list.appendChild(item);
+  });
+  showView('session-view');
+}
+
+// ─── DETAIL VIEW ──────────────────────────────────────────────────────────────
+function openDetail(idx) {
+  detailFromIdx = idx;
+  const step = currentDay.steps[idx];
+  document.getElementById('det-name').textContent = step.name;
+  document.getElementById('det-reps').textContent =
+    step.dur ? `${step.dur}s` : (step.reps || '');
+  document.getElementById('det-note').textContent = step.note || 'No additional notes.';
+  const yt = document.getElementById('det-yt');
+  if (step.link) { yt.href = step.link; yt.style.display = 'inline-flex'; }
+  else { yt.style.display = 'none'; }
+  showView('detail-view');
+}
+
+document.getElementById('det-start-btn').addEventListener('click', () => {
+  tryAudio(); startSession(currentDay, detailFromIdx);
+});
+
+// ─── FLOW ─────────────────────────────────────────────────────────────────────
+function startSession(day, fromIdx = 0) {
+  currentDay = day;
+  loadStep(fromIdx);
+  showView('flow-view');
+}
+
+function loadStep(idx) {
+  if (idx >= currentDay.steps.length) { showDone(); return; }
+  clearInterval(timerInterval);
+  isRunning = false;
+  currentStepIdx = idx;
+  const step = currentDay.steps[idx];
+
+  document.getElementById('fl-label').textContent = typeLabel(step.type);
+  document.getElementById('fl-stepnum').textContent = `Step ${idx+1} of ${currentDay.steps.length}`;
+  document.getElementById('fl-name').textContent = step.name;
+  updateUpNext(idx);
+
+  if (step.dur != null) {
+    // Timed step
+    document.getElementById('timed-layout').style.display = 'flex';
+    document.getElementById('rep-layout').style.display = 'none';
+    document.getElementById('fl-note').textContent = step.note || '';
+
+    const colors = { rest: '#34d399', breathe: '#818cf8', hold: '#c084fc' };
+    document.getElementById('ring-fg').style.stroke = colors[step.type] || '#c084fc';
+
+    timeLeft = step.dur; totalTime = step.dur;
+    updateDisplay(timeLeft); updateRing(timeLeft, totalTime);
+    showCtrl('running');
+    startTimer();
+  } else {
+    // Rep step
+    document.getElementById('timed-layout').style.display = 'none';
+    document.getElementById('rep-layout').style.display = 'flex';
+    document.getElementById('fl-reps').textContent = step.reps || '';
+    document.getElementById('fl-rep-note').textContent = step.note || '';
+    const flYt = document.getElementById('fl-yt');
+    if (step.link) { flYt.href = step.link; flYt.style.display = 'inline-flex'; }
+    else { flYt.style.display = 'none'; }
+    showCtrl('rep');
+  }
+}
+
+function showCtrl(state) {
+  document.getElementById('ctrl-running').style.display = state === 'running' ? 'flex' : 'none';
+  document.getElementById('ctrl-done').style.display = state === 'done' ? 'flex' : 'none';
+  document.getElementById('ctrl-rep').style.display = state === 'rep' ? 'flex' : 'none';
+}
+
+function typeLabel(t) {
+  return { rest: '⏸ Rest', breathe: '🌬 Breathe', hold: '💪 Hold', reps: '🏋️ Exercise' }[t] || '⏱ Timer';
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  isRunning = true;
+  document.getElementById('btn-playpause').textContent = '⏸ Pause';
+  timerInterval = setInterval(tick, 1000);
+}
+function pauseTimer() {
+  clearInterval(timerInterval); isRunning = false;
+  document.getElementById('btn-playpause').textContent = '▶ Resume';
+}
+function tick() {
+  timeLeft--;
+  if (timeLeft <= 3 && timeLeft > 0) beepTick();
+  updateDisplay(timeLeft); updateRing(timeLeft, totalTime);
+  if (timeLeft <= 0) {
+    clearInterval(timerInterval); isRunning = false;
+    beepDone();
+    showCtrl('done'); // wait for user to press Next
+  }
+}
+
+// Skip: if on exercise/breathe, jump to next rest. If on rest, go to next step.
+function handleSkip() {
+  clearInterval(timerInterval); isRunning = false;
+  const steps = currentDay.steps;
+  const cur = steps[currentStepIdx];
+  let next = currentStepIdx + 1;
+  if (cur.type !== 'rest' && cur.type !== 'breathe') {
+    // Find next rest
+    while (next < steps.length && steps[next].type !== 'rest' && steps[next].type !== 'breathe') next++;
+  }
+  beep(660, 0.1);
+  if (next >= steps.length) { showDone(); return; }
+  loadStep(next);
+}
+
+function handleNext() {
+  beep(660, 0.1);
+  loadStep(currentStepIdx + 1);
+}
+
+function updateDisplay(t) {
+  const m = Math.floor(t / 60), s = t % 60;
+  document.getElementById('time-display').textContent =
+    m > 0 ? `${m}:${String(s).padStart(2,'0')}` : String(t);
+  document.getElementById('time-label').textContent = m > 0 ? 'min' : (t === 1 ? 'second' : 'seconds');
+}
+function updateRing(t, total) {
+  const pct = total > 0 ? t / total : 0;
+  document.getElementById('ring-fg').style.strokeDashoffset = CIRC * (1 - pct);
+}
+function updateUpNext(idx) {
+  const next = currentDay.steps[idx + 1];
+  const box = document.getElementById('up-next-box');
+  if (next) {
+    const label = next.dur != null
+      ? `${next.name} · ${next.dur}s`
+      : `${next.name}${next.reps ? ' · ' + next.reps : ''}`;
+    document.getElementById('up-next-name').textContent = label;
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+function showDone() {
+  clearInterval(timerInterval);
+  document.getElementById('done-sub').textContent = `${currentDay.name} — ${currentDay.focus}`;
+  showView('done-view');
+}
+
+// ─── CONTROLS ────────────────────────────────────────────────────────────────
+document.getElementById('btn-playpause').addEventListener('click', () => {
+  tryAudio(); isRunning ? pauseTimer() : startTimer();
+});
+document.getElementById('btn-restart').addEventListener('click', () => {
+  tryAudio(); clearInterval(timerInterval); beep(440,0.08); loadStep(currentStepIdx);
+});
+document.getElementById('btn-restart2').addEventListener('click', () => {
+  tryAudio(); clearInterval(timerInterval); beep(440,0.08); loadStep(currentStepIdx);
+});
+document.getElementById('btn-skip-timed').addEventListener('click', () => { tryAudio(); handleSkip(); });
+document.getElementById('btn-next').addEventListener('click', () => { tryAudio(); handleNext(); });
+document.getElementById('btn-done').addEventListener('click', () => { tryAudio(); handleNext(); });
+document.getElementById('btn-skip-rep').addEventListener('click', () => { tryAudio(); handleSkip(); });
+
+// ─── BACK NAV ────────────────────────────────────────────────────────────────
+document.getElementById('back-btn').addEventListener('click', () => {
+  clearInterval(timerInterval);
+  const active = document.querySelector('.view.active')?.id;
+  if (active === 'flow-view' || active === 'detail-view') {
+    openDay(currentDay);
+  } else if (active === 'session-view') {
+    currentDay = null; buildDayPicker(); showView('day-picker');
+  } else {
+    currentDay = null; showView('day-picker');
+  }
+});
+document.getElementById('start-btn').addEventListener('click', () => {
+  tryAudio(); startSession(currentDay, 0);
+});
+document.getElementById('done-back-btn').addEventListener('click', () => {
+  clearInterval(timerInterval); currentDay = null; buildDayPicker(); showView('day-picker');
+});
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+buildDayPicker();
+showView('day-picker');
+</script>
+</body>
+</html>
