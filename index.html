@@ -51,13 +51,13 @@
     .back-btn {
       background: none; border: none; color: var(--accent);
       font-family: 'Outfit', sans-serif;
-      font-size: 22px; line-height: 1; cursor: pointer;
+      font-size: clamp(24px, 6vw, 30px); line-height: 1; cursor: pointer;
       padding: 0 10px 0 0; display: none;
       transition: opacity 0.15s;
     }
     .back-btn:active { opacity: 0.5; }
-    header h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
-    #header-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    header h1 { font-size: clamp(17px, 4.5vw, 22px); font-weight: 700; letter-spacing: -0.2px; }
+    #header-sub { font-size: clamp(13px, 3.2vw, 16px); color: var(--muted); margin-top: 1px; }
 
     /* ── Views ──────────────────────────────────────────────── */
     .view { padding: 22px; display: none; flex-direction: column; flex: 1; }
@@ -65,7 +65,7 @@
 
     /* ── Day Picker ─────────────────────────────────────────── */
     .picker-eyebrow {
-      font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
+      font-size: clamp(12px, 3vw, 14px); font-weight: 700; letter-spacing: 2.5px;
       color: var(--muted); text-transform: uppercase;
       margin-bottom: 18px;
     }
@@ -87,63 +87,63 @@
     .day-row:active { opacity: 0.55; }
     .day-row:active::after { transform: scaleY(1); }
     .day-idx {
-      font-size: 11px; font-weight: 700; color: var(--border);
-      width: 18px; text-align: right; flex-shrink: 0;
+      font-size: clamp(12px, 3vw, 15px); font-weight: 700; color: var(--border);
+      width: 22px; text-align: right; flex-shrink: 0;
       letter-spacing: 0.5px;
     }
     .day-body { flex: 1; }
-    .day-name { font-size: 17px; font-weight: 700; letter-spacing: -0.4px; }
-    .day-focus { font-size: 12px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+    .day-name { font-size: clamp(19px, 5vw, 24px); font-weight: 700; letter-spacing: -0.4px; }
+    .day-focus { font-size: clamp(13px, 3.5vw, 17px); color: var(--muted); margin-top: 2px; font-weight: 400; }
     .day-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .day-tag {
-      font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+      font-size: clamp(12px, 3vw, 14px); font-weight: 700; letter-spacing: 0.3px;
       color: var(--accent); background: var(--accent-bg);
       border: 1px solid var(--accent-bdr);
-      padding: 2px 8px; border-radius: 20px;
+      padding: 3px 10px; border-radius: 20px;
     }
-    .day-chev { color: var(--muted); font-size: 15px; opacity: 0.4; }
+    .day-chev { color: var(--muted); font-size: clamp(17px, 4.5vw, 22px); opacity: 0.4; }
 
     /* ── Session View ───────────────────────────────────────── */
     .sess-header { margin-bottom: 22px; }
-    .sess-title { font-size: 26px; font-weight: 800; letter-spacing: -0.8px; line-height: 1.1; }
-    .sess-sub { font-size: 12px; color: var(--muted); margin-top: 5px; font-weight: 400; }
+    .sess-title { font-size: clamp(28px, 7vw, 36px); font-weight: 800; letter-spacing: -0.8px; line-height: 1.1; }
+    .sess-sub { font-size: clamp(14px, 3.5vw, 17px); color: var(--muted); margin-top: 5px; font-weight: 400; }
     .step-list { flex: 1; overflow-y: auto; }
     .step-row {
       display: flex; align-items: center; gap: 14px;
-      padding: 11px 0; border-bottom: 1px solid var(--border);
+      padding: 13px 0; border-bottom: 1px solid var(--border);
       -webkit-tap-highlight-color: transparent;
     }
     .step-row:last-child { border-bottom: none; }
     .step-row.clickable { cursor: pointer; }
     .step-row.clickable:active { opacity: 0.55; }
     .step-idx {
-      width: 20px; text-align: right; flex-shrink: 0;
-      font-size: 11px; font-weight: 700; color: var(--border);
+      width: 24px; text-align: right; flex-shrink: 0;
+      font-size: clamp(12px, 3vw, 15px); font-weight: 700; color: var(--border);
     }
-    .step-idx.is-rest { color: var(--accent); opacity: 0.3; font-size: 8px; }
+    .step-idx.is-rest { color: var(--accent); opacity: 0.3; font-size: clamp(10px, 2.5vw, 13px); }
     .step-body { flex: 1; min-width: 0; }
     .step-name {
-      font-size: 14px; font-weight: 600;
+      font-size: clamp(15px, 4vw, 19px); font-weight: 600;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .step-name.is-rest { color: var(--muted); font-weight: 400; font-size: 13px; }
+    .step-name.is-rest { color: var(--muted); font-weight: 400; font-size: clamp(14px, 3.5vw, 17px); }
     .step-note {
-      font-size: 11px; color: var(--muted); margin-top: 1px;
+      font-size: clamp(12px, 3vw, 15px); color: var(--muted); margin-top: 2px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .step-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .step-chip {
-      font-size: 11px; font-weight: 600; color: var(--muted);
+      font-size: clamp(12px, 3vw, 15px); font-weight: 600; color: var(--muted);
       background: var(--glass); border: 1px solid var(--glass-bdr);
-      padding: 2px 8px; border-radius: 6px;
+      padding: 3px 9px; border-radius: 6px;
     }
     .step-chip.timed { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-bdr); }
     .yt-dot { width: 6px; height: 6px; background: var(--red); border-radius: 50%; flex-shrink: 0; }
     .btn-start {
-      width: 100%; padding: 15px; margin-top: 14px; flex-shrink: 0;
+      width: 100%; padding: 16px; margin-top: 14px; flex-shrink: 0;
       background: var(--accent); border: none; border-radius: 14px;
       color: #fff; font-family: 'Outfit', sans-serif;
-      font-size: 15px; font-weight: 700; letter-spacing: -0.2px;
+      font-size: clamp(16px, 4vw, 20px); font-weight: 700; letter-spacing: -0.2px;
       cursor: pointer;
       transition: transform 0.1s cubic-bezier(0.16,1,0.3,1), opacity 0.1s;
     }
@@ -151,21 +151,21 @@
 
     /* ── Detail View ────────────────────────────────────────── */
     #detail-view { gap: 16px; }
-    .det-name { font-size: 26px; font-weight: 800; letter-spacing: -0.8px; line-height: 1.15; }
+    .det-name { font-size: clamp(28px, 7vw, 36px); font-weight: 800; letter-spacing: -0.8px; line-height: 1.15; }
     .det-chip {
       display: inline-block;
-      font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
+      font-size: clamp(13px, 3.5vw, 17px); font-weight: 700; letter-spacing: 0.3px;
       color: var(--accent); background: var(--accent-bg);
       border: 1px solid var(--accent-bdr);
-      padding: 4px 12px; border-radius: 20px;
+      padding: 5px 14px; border-radius: 20px;
     }
-    .det-note { font-size: 14px; color: var(--muted); line-height: 1.7; flex: 1; }
+    .det-note { font-size: clamp(15px, 3.8vw, 19px); color: var(--muted); line-height: 1.7; flex: 1; }
     .yt-link {
       display: inline-flex; align-items: center; gap: 8px;
-      padding: 11px 16px; text-decoration: none;
+      padding: 12px 18px; text-decoration: none;
       background: var(--red-bg); border: 1px solid var(--red-bdr);
       border-radius: 12px; color: var(--red);
-      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+      font-family: 'Outfit', sans-serif; font-size: clamp(14px, 3.5vw, 17px); font-weight: 600;
       align-self: flex-start; flex-shrink: 0;
       transition: opacity 0.15s;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
@@ -173,10 +173,10 @@
     .yt-link svg { width: 15px; height: 15px; }
     .yt-link:active { opacity: 0.65; }
     .btn-here {
-      width: 100%; padding: 15px; border: none;
+      width: 100%; padding: 16px; border: none;
       background: var(--accent); border-radius: 14px;
       color: #fff; font-family: 'Outfit', sans-serif;
-      font-size: 15px; font-weight: 700; letter-spacing: -0.2px;
+      font-size: clamp(16px, 4vw, 20px); font-weight: 700; letter-spacing: -0.2px;
       cursor: pointer; flex-shrink: 0;
       transition: transform 0.1s cubic-bezier(0.16,1,0.3,1), opacity 0.1s;
     }
@@ -186,17 +186,17 @@
     #flow-view { padding: 16px 22px 26px; justify-content: space-between; gap: 12px; }
     .fl-top { display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .fl-tag {
-      font-size: 9px; font-weight: 800; letter-spacing: 2.5px;
-      text-transform: uppercase; padding: 4px 11px; border-radius: 20px;
+      font-size: clamp(11px, 2.8vw, 14px); font-weight: 800; letter-spacing: 2.5px;
+      text-transform: uppercase; padding: 5px 13px; border-radius: 20px;
       border: 1px solid;
     }
     .fl-tag.hold  { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-bdr); }
     .fl-tag.rest  { color: var(--blue);   background: var(--blue-bg);   border-color: var(--blue-bdr); }
     .fl-tag.breathe { color: var(--amber); background: var(--amber-bg); border-color: var(--amber-bdr); }
     .fl-tag.reps  { color: var(--muted);  background: var(--glass);     border-color: var(--glass-bdr); }
-    .fl-stepnum { font-size: 11px; color: var(--muted); }
+    .fl-stepnum { font-size: clamp(13px, 3.2vw, 16px); color: var(--muted); }
     .fl-name {
-      font-size: 20px; font-weight: 800;
+      font-size: clamp(22px, 5.5vw, 30px); font-weight: 800;
       text-align: center; letter-spacing: -0.5px; line-height: 1.25;
     }
 
@@ -210,13 +210,13 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
     #time-display {
-      font-size: 52px; font-weight: 900; letter-spacing: -3px;
+      font-size: clamp(58px, 15vw, 76px); font-weight: 900; letter-spacing: -3px;
       font-variant-numeric: tabular-nums;
     }
-    #time-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-top: 2px; }
+    #time-label { font-size: clamp(12px, 3vw, 15px); color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-top: 2px; }
 
     #timed-layout { display: none; flex-direction: column; align-items: center; gap: 14px; }
-    .fl-note { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.6; padding: 0 10px; }
+    .fl-note { font-size: clamp(14px, 3.5vw, 18px); color: var(--muted); text-align: center; line-height: 1.6; padding: 0 10px; }
 
     /* Rep layout — left-aligned, editorial */
     #rep-layout {
@@ -228,20 +228,20 @@
       border-radius: 20px; padding: 26px 22px;
     }
     .rep-eyebrow {
-      font-size: 9px; font-weight: 700; letter-spacing: 2.5px;
+      font-size: clamp(11px, 2.8vw, 14px); font-weight: 700; letter-spacing: 2.5px;
       text-transform: uppercase; color: var(--muted);
     }
     .rep-count {
-      font-size: 46px; font-weight: 900;
+      font-size: clamp(50px, 13vw, 64px); font-weight: 900;
       color: var(--accent); letter-spacing: -2.5px; line-height: 1;
     }
-    .rep-note { font-size: 13px; color: var(--muted); line-height: 1.65; }
+    .rep-note { font-size: clamp(14px, 3.5vw, 18px); color: var(--muted); line-height: 1.65; }
     .rep-yt {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 7px 12px; text-decoration: none;
+      padding: 8px 14px; text-decoration: none;
       background: var(--red-bg); border: 1px solid var(--red-bdr);
       border-radius: 8px; color: var(--red);
-      font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+      font-family: 'Outfit', sans-serif; font-size: clamp(13px, 3.2vw, 16px); font-weight: 600;
       margin-top: 4px; transition: opacity 0.15s;
     }
     .rep-yt svg { width: 13px; height: 13px; }
@@ -254,16 +254,16 @@
       border-radius: 12px; padding: 11px 14px;
     }
     .up-next-label {
-      font-size: 9px; font-weight: 700; letter-spacing: 2px;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 3px;
+      font-size: clamp(11px, 2.8vw, 14px); font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
     }
-    .up-next-name { font-size: 13px; font-weight: 500; }
+    .up-next-name { font-size: clamp(14px, 3.5vw, 18px); font-weight: 500; }
 
     /* Controls */
     .ctrl-row { display: flex; gap: 10px; margin-top: 10px; }
     .ctrl-btn {
-      flex: 1; padding: 14px; border-radius: 12px; border: none;
-      font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+      flex: 1; padding: 16px; border-radius: 12px; border: none;
+      font-family: 'Outfit', sans-serif; font-size: clamp(15px, 4vw, 19px); font-weight: 600;
       letter-spacing: -0.1px; cursor: pointer;
       transition: transform 0.1s cubic-bezier(0.16,1,0.3,1), opacity 0.1s;
     }
@@ -276,7 +276,7 @@
     }
     .c-green { background: var(--accent); color: #fff; }
     .c-wide { flex: 2; }
-    .c-full { width: 100%; font-size: 15px; padding: 15px; }
+    .c-full { width: 100%; font-size: clamp(16px, 4vw, 20px); padding: 16px; }
 
     /* Done */
     #done-view { align-items: center; justify-content: center; text-align: center; gap: 16px; }
@@ -286,13 +286,13 @@
       display: flex; align-items: center; justify-content: center;
       color: var(--accent);
     }
-    .done-title { font-size: 26px; font-weight: 800; letter-spacing: -0.8px; }
-    .done-sub { font-size: 14px; color: var(--muted); }
+    .done-title { font-size: clamp(28px, 7vw, 36px); font-weight: 800; letter-spacing: -0.8px; }
+    .done-sub { font-size: clamp(15px, 3.8vw, 19px); color: var(--muted); }
     .done-back {
-      margin-top: 8px; padding: 14px 32px;
+      margin-top: 8px; padding: 16px 36px;
       background: var(--accent); border: none; border-radius: 14px;
       color: #fff; font-family: 'Outfit', sans-serif;
-      font-size: 15px; font-weight: 700; letter-spacing: -0.2px;
+      font-size: clamp(16px, 4vw, 20px); font-weight: 700; letter-spacing: -0.2px;
       cursor: pointer;
       transition: transform 0.1s cubic-bezier(0.16,1,0.3,1);
     }
